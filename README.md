@@ -1,4 +1,4 @@
-C3Pro Android
+C3PRO Android
 -------
 C3PRO uses the [HAPI][hapi] FHIR library and [ResearchStack] in an attempt to bring the [C3-PRO] functionality to Android.
 
@@ -14,7 +14,7 @@ The few things that need to be set up in order for a project to run with C3PRO a
 work out of the box.
 
 To set up a new project using the C3PRO framework, the library is available on jCenter and can simply be added as a dependency:
-´´´´groovy
+´´´groovy
 dependencies {
     compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.1'){
         exclude module: 'javax.servlet-api'
