@@ -31,7 +31,7 @@ The app has a class called C3PROApplication which is a subclass of `Application`
 It seems that for now, multidex is needed to accomodate the large number of references in the library's dependencies. So it is necessary to enable Multidex in the application and the gradle build file.
 Most setup methods are found in the onCreate() method of the C3PROApplication class.
 The C3PRO class is initialized with the application's context and a FHIR Server URL.
-There are also some ResearchStack settings. For details about that visit the [ResearchStack website][researchstack].
+There are also some ResearchStack settings. More details about that can be found on the [ResearchStack website][researchstack].
 
 The `Application`file should look something like this:
 ```java
