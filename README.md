@@ -9,7 +9,7 @@ you can send to your server.
 ### Usage
 
 This is a sample application, demonstrating how to use the [C3PRO Android Framework][C3-PRO-android].
-It is available here as a Android / Gradle Project. It can be inported in Android Studio by clicking "VCS" -> "Check out from Version Control" -> GitHub
+It is available here as a Android / Gradle Project. It can be inported in Android Studio by clicking "VCS" -> "Check out from Version Control" -> GitHub.
 The few things that need to be set up in order for a project to run with C3PRO are marked as TODOs. In this project they are all set up and should
 work out of the box.
 
