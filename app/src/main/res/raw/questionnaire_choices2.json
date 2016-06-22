@@ -1,6 +1,6 @@
 {
   "resourceType": "Questionnaire",
-  "id": "example-question-choice",
+  "id": "example-question-choice2",
   "contained": [
     {
       "resourceType": "ValueSet",
@@ -85,7 +85,8 @@
         {
           "question": "choice-valueSet",
           "answerCoding": {
-            "code": "http://sf-36.org/fhir/StructureDefinition/answers-3-levels#2"
+            "code": "2",
+            "system": "http://sf-36.org/fhir/StructureDefinition/answers-3-levels"
           }
         }
       ],
