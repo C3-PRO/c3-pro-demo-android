@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatTextView;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -13,7 +14,14 @@ import android.widget.Toast;
 import org.hl7.fhir.dstu3.model.Questionnaire;
 import org.hl7.fhir.dstu3.model.QuestionnaireResponse;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import ch.usz.c3pro.c3_pro_android_framework.C3PRO;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.jobs.ReadQuestionnaireFromURLJob;
+import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireAdapter;
 import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireFragment;
 
 /**
@@ -48,22 +56,37 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         /**
-         * Adding an Item to the ListView for every questionnaire file in the raw resource folder
-         * this is an ugly way to provide sample data. replace with your own data!
+         * Using the C3PRO QuestionnaireAdapter to display a List of Questionnaires in the ListView
+         * defined in the layout file activity_main.xml.
+         * When the user clicks one of the Questionnaires, the survey is started.
          * */
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, SampleData.getAllRawQuestionnaireResources());
+        final ArrayAdapter<Questionnaire> questionnaireAdapter = new QuestionnaireAdapter(this, android.R.layout.simple_list_item_1, new ArrayList<Questionnaire>());
         final ListView surveyListView = (ListView) findViewById(R.id.survey_list);
-        surveyListView.setAdapter(adapter);
+        surveyListView.setAdapter(questionnaireAdapter);
 
         surveyListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                int rawID = getResources().getIdentifier((String) surveyListView.getItemAtPosition(position),
-                        "raw", getPackageName());
-                Questionnaire questionnaire = SampleData.getQuestionnaireFromJson(getResources(), rawID);
-                launchSurvey(questionnaire);
+                launchSurvey((Questionnaire)surveyListView.getItemAtPosition(position));
             }
         });
+
+        /**
+         * Reading all Questionnaires listed in the questionnaire_list in the raw folder from their
+         * URLs in a background task and adding them to the listView defined in the layout file once
+         * they are loaded.
+         * */
+        String questionnaireList = C3PRO.getDataQueue().getRawFileAsString(getResources(), R.raw.questionnaire_list);
+        List<String> urlList = Arrays.asList(questionnaireList.split("[\\r\\n]+"));
+        for(String url: urlList){
+            ReadQuestionnaireFromURLJob qJob = new ReadQuestionnaireFromURLJob(url, url, new DataQueue.QuestionnaireReceiver() {
+                @Override
+                public void receiveQuestionnaire(String requestID, Questionnaire questionnaire) {
+                    questionnaireAdapter.add(questionnaire);
+                }
+            });
+            C3PRO.getDataQueue().addJob(qJob);
+        }
 
 
         AppCompatButton clearButton = (AppCompatButton) findViewById(R.id.clear_button);
