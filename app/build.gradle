@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "ch.usz.c3pro.demo"
+        applicationId "ch.usz.c3pro.demo.android"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1
@@ -28,9 +28,5 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     // TODO: include C3PRO framework, but exclude some of the hapi library
-    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.1'){
-        exclude module: 'javax.servlet-api'
-        exclude module: 'hapi-fhir-base'
-    }
-
+    compile project(':c3-pro-android-framework')
 }

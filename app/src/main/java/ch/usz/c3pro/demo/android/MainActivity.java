@@ -1,6 +1,11 @@
 package ch.usz.c3pro.demo.android;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatTextView;
@@ -10,6 +15,18 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessStatusCodes;
+import com.google.android.gms.fitness.data.DataType;
 
 import org.hl7.fhir.dstu3.model.Questionnaire;
 import org.hl7.fhir.dstu3.model.QuestionnaireResponse;
@@ -48,12 +65,19 @@ import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireFragment
  * a survey you have as a HAPI FHIR Questionnaire
  */
 public class MainActivity extends AppCompatActivity {
-    public static final String LTAG = "FSTK";
+    private GoogleApiClient googleApiClient = null;
+    public static final String LTAG = "C3P";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        /**
+         * Set the app up to collect step count data
+         * */
+        buildFitnessClient();
 
         /**
          * Using the C3PRO QuestionnaireAdapter to display a List of Questionnaires in the ListView
@@ -183,6 +207,78 @@ public class MainActivity extends AppCompatActivity {
     private void clearData() {
         AppCompatTextView resultView = (AppCompatTextView) findViewById(R.id.result_textView);
         resultView.setText("");
+    }
+
+    /**
+     *  Build a {@link GoogleApiClient} that will authenticate the user and allow the application
+     *  to connect to Fitness APIs. The scopes included should match the scopes your app needs
+     *  (see documentation for details). Authentication will occasionally fail intentionally,
+     *  and in those cases, there will be a known resolution, which the OnConnectionFailedListener()
+     *  can address. Examples of this include the user never having signed in before, or having
+     *  multiple accounts on the device and needing to specify which account to use, etc.
+     */
+    private void buildFitnessClient() {
+        // Create the Google API Client
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Fitness.RECORDING_API)
+                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                .addConnectionCallbacks(
+                        new GoogleApiClient.ConnectionCallbacks() {
+
+                            @Override
+                            public void onConnected(Bundle bundle) {
+                                Log.i(LTAG, "Connected!!!");
+                                // Now you can make calls to the Fitness APIs.  What to do?
+                                // Subscribe to some data sources!
+                                subscribe();
+                            }
+
+                            @Override
+                            public void onConnectionSuspended(int i) {
+                                // If your connection to the sensor gets lost at some point,
+                                // you'll be able to determine the reason and react to it here.
+                                if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
+                                    Log.i(LTAG, "Connection lost.  Cause: Network Lost.");
+                                } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
+                                    Log.i(LTAG, "Connection lost.  Reason: Service Disconnected");
+                                }
+                            }
+                        }
+                )
+                .enableAutoManage(this, 0, new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(ConnectionResult result) {
+                        Log.i(LTAG, "Google Play services connection failed. Cause: " +
+                                result.toString());
+                        Snackbar.make(
+                                MainActivity.this.findViewById(android.R.id.content),
+                                "Exception while connecting to Google Play services: " +
+                                        result.getErrorMessage(),
+                                Snackbar.LENGTH_INDEFINITE).show();
+                    }
+                })
+                .build();
+    }
+
+    public void subscribe() {
+        // To create a subscription, invoke the Recording API. As soon as the subscription is
+        // active, fitness data will start recording.
+        Fitness.RecordingApi.subscribe(googleApiClient, DataType.TYPE_STEP_COUNT_DELTA)
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        if (status.isSuccess()) {
+                            if (status.getStatusCode()
+                                    == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                Log.i(LTAG, "Existing subscription for activity detected.");
+                            } else {
+                                Log.i(LTAG, "Successfully subscribed!");
+                            }
+                        } else {
+                            Log.i(LTAG, "There was a problem subscribing.");
+                        }
+                    }
+                });
     }
 }
 

@@ -1,4 +1,4 @@
-package ch.usz.c3pro.demo;
+package ch.usz.c3pro.demo.android;
 
 import org.junit.Test;
 
