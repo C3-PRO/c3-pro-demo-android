@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "ch.usz.c3pro.demo"
+        applicationId "ch.usz.c3pro.demo.android"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 1
