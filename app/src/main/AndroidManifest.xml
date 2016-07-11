@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ch.usz.c3pro.demo.android">
 
-    <uses-permission android:name="android.permission.FITNESS_ACTIVITY_READ" />
+    <uses-permission android:name="android.permission.FITNESS_ACTIVITY_READ_WRITE" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
 
     <application
         android:name=".C3PROApplication"
