@@ -1,4 +1,4 @@
-package ch.usz.c3pro.demo;
+package ch.usz.c3pro.demo.android;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
