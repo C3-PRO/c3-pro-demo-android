@@ -325,21 +325,28 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onConnected(Bundle bundle) {
                                 Log.i(LTAG, "Connected!!!");
-                                // Now you can make calls to the Fitness APIs.  What to do?
+                                /**
+                                 * The connection is established, calls to the Fitness APIs can now
+                                 * be made. See subscribe() function to see how to subscribe to i.e.
+                                 * step count data.
+                                 * */
                                 //TODO: Subscribe to some data sources!
                                 subscribe();
 
                                 /**
-                                 * If now fit data is available on the test phone, create height and weight entries for testing
+                                 * If no fit data is available on the test phone, create height and
+                                 * weight entries for testing
                                  * */
                                 //GoogleFitAgent.enterHeightDataPoint(getApplicationContext(), 1.68f);
-                                GoogleFitAgent.enterWeightDataPoint(getApplicationContext(), 67f);
+                                //GoogleFitAgent.enterWeightDataPoint(getApplicationContext(), 67f);
                             }
 
                             @Override
                             public void onConnectionSuspended(int i) {
-                                // If your connection to the sensor gets lost at some point,
-                                // you'll be able to determine the reason and react to it here.
+                                /**
+                                 * Decide what to do if the connection to the Fitness sensors is lost
+                                 * at some point. The cause can be read from the ConnectionCallbacks
+                                 * */
                                 if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_NETWORK_LOST) {
                                     Log.i(LTAG, "Connection lost.  Cause: Network Lost.");
                                 } else if (i == GoogleApiClient.ConnectionCallbacks.CAUSE_SERVICE_DISCONNECTED) {
@@ -367,6 +374,7 @@ public class MainActivity extends AppCompatActivity {
         /**
          * To create a subscription, invoke the Recording API. As soon as the subscription is
          * active, fitness data will start recording.
+         * The recording API has to have been added while building the FitnessClient!
          */
         Fitness.RecordingApi.subscribe(googleApiClient, DataType.TYPE_STEP_COUNT_DELTA)
                 .setResultCallback(new ResultCallback<Status>() {
@@ -375,12 +383,12 @@ public class MainActivity extends AppCompatActivity {
                         if (status.isSuccess()) {
                             if (status.getStatusCode()
                                     == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                Log.i(LTAG, "Existing subscription for activity detected.");
+                                Log.i(LTAG, "Step Count: Existing subscription for activity detected.");
                             } else {
-                                Log.i(LTAG, "Successfully subscribed!");
+                                Log.i(LTAG, "Step Count: Successfully subscribed!");
                             }
                         } else {
-                            Log.i(LTAG, "There was a problem subscribing.");
+                            Log.i(LTAG, "Step Count: There was a problem subscribing.");
                         }
                     }
                 });
@@ -392,12 +400,12 @@ public class MainActivity extends AppCompatActivity {
                         if (status.isSuccess()) {
                             if (status.getStatusCode()
                                     == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                Log.i(LTAG, "Existing subscription for activity detected.");
+                                Log.i(LTAG, "Height: Existing subscription for activity detected.");
                             } else {
-                                Log.i(LTAG, "Successfully subscribed!");
+                                Log.i(LTAG, "Height: Successfully subscribed!");
                             }
                         } else {
-                            Log.i(LTAG, "There was a problem subscribing.");
+                            Log.i(LTAG, "Height: There was a problem subscribing.");
                         }
                     }
                 });
@@ -409,12 +417,12 @@ public class MainActivity extends AppCompatActivity {
                         if (status.isSuccess()) {
                             if (status.getStatusCode()
                                     == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
-                                Log.i(LTAG, "Existing subscription for activity detected.");
+                                Log.i(LTAG, "Weight: Existing subscription for activity detected.");
                             } else {
-                                Log.i(LTAG, "Successfully subscribed!");
+                                Log.i(LTAG, "Weight: Successfully subscribed!");
                             }
                         } else {
-                            Log.i(LTAG, "There was a problem subscribing.");
+                            Log.i(LTAG, "Weight: There was a problem subscribing.");
                         }
                     }
                 });
