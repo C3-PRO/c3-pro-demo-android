@@ -1,11 +1,16 @@
 package ch.usz.c3pro.demo.android;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.annotation.StyleRes;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatTextView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -34,7 +39,9 @@ import java.util.Date;
 import java.util.List;
 
 import ch.usz.c3pro.c3_pro_android_framework.C3PRO;
+import ch.usz.c3pro.c3_pro_android_framework.C3PROErrorCode;
 import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.jobs.LoadResultJob;
 import ch.usz.c3pro.c3_pro_android_framework.dataqueue.jobs.ReadQuestionnaireFromURLJob;
 import ch.usz.c3pro.c3_pro_android_framework.googlefit.GoogleFitAgent;
 import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireAdapter;
@@ -66,6 +73,36 @@ import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireFragment
 public class MainActivity extends AppCompatActivity {
     private GoogleApiClient googleApiClient = null;
     public static final String LTAG = "LC3P";
+
+    @Override
+    public MenuInflater getMenuInflater() {
+        return super.getMenuInflater();
+    }
+
+    public MainActivity() {
+        super();
+    }
+
+    @Override
+    public void setTheme(@StyleRes int resid) {
+        super.setTheme(resid);
+    }
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+    }
+
+    @Nullable
+    @Override
+    public ActionBar getSupportActionBar() {
+        return super.getSupportActionBar();
+    }
+
+    @Override
+    public void setSupportActionBar(@Nullable Toolbar toolbar) {
+        super.setSupportActionBar(toolbar);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,14 +146,18 @@ public class MainActivity extends AppCompatActivity {
          * */
         String questionnaireList = C3PRO.getDataQueue().getRawFileAsString(getResources(), R.raw.questionnaire_list);
         List<String> urlList = Arrays.asList(questionnaireList.split("[\\r\\n]+"));
-        for (String url : urlList) {
-            ReadQuestionnaireFromURLJob qJob = new ReadQuestionnaireFromURLJob(url, url, new DataQueue.QuestionnaireReceiver() {
+        for (final String url : urlList) {
+            C3PRO.getDataQueue().getJsonQuestionnaireFromURL(url, url, new DataQueue.CreateQuestionnaireCallback() {
                 @Override
-                public void receiveQuestionnaire(String requestID, Questionnaire questionnaire) {
-                    questionnaireAdapter.add(questionnaire);
+                public void onSuccess(String requestID, Questionnaire result) {
+                    questionnaireAdapter.add(result);
+                }
+
+                @Override
+                public void onFail(String requestID, C3PROErrorCode code) {
+                    Log.d(LTAG, "Reading questionnaire from URL failed: " + requestID + " error: " + code.toString());
                 }
             });
-            C3PRO.getDataQueue().addJob(qJob);
         }
 
         /**
@@ -134,14 +175,19 @@ public class MainActivity extends AppCompatActivity {
 
                 GoogleFitAgent.getAggregateStepCountBetween(startTime, now, "stepCount", new GoogleFitAgent.QuantityReceiver() {
                     @Override
-                    public void receiveQuantity(String requestID, Quantity quantity) {
+                    public void onSuccess(String requestID, Quantity result) {
                         /**
                          * request ID can be used to identify the request. (Not necessary in this
                          * case! Just for demonstration here.)
                          * */
                         if (requestID.equals("stepCount")) {
-                            Toast.makeText(MainActivity.this, quantity.getValue().intValue() + " " + quantity.getUnit(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, result.getValue().intValue() + " " + result.getUnit(), Toast.LENGTH_SHORT).show();
                         }
+                    }
+
+                    @Override
+                    public void onFail(String requestID, C3PROErrorCode code) {
+
                     }
                 });
             }
@@ -157,8 +203,13 @@ public class MainActivity extends AppCompatActivity {
 
                 GoogleFitAgent.getLatestSampleOfHeight("height", new GoogleFitAgent.QuantityReceiver() {
                     @Override
-                    public void receiveQuantity(String requestID, Quantity quantity) {
-                        Toast.makeText(MainActivity.this, quantity.getValue().floatValue() + " " + quantity.getUnit(), Toast.LENGTH_SHORT).show();
+                    public void onSuccess(String requestID, Quantity result) {
+                        Toast.makeText(MainActivity.this, result.getValue().floatValue() + " " + result.getUnit(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFail(String requestID, C3PROErrorCode code) {
+
                     }
                 });
             }
@@ -180,8 +231,13 @@ public class MainActivity extends AppCompatActivity {
 
                 GoogleFitAgent.getWeightSummaryBetween(startTime, now, "weightSummary", new GoogleFitAgent.ObservationReceiver() {
                     @Override
-                    public void receiveObservation(String requestID, Observation observation) {
-                        printObservation(observation);
+                    public void onSuccess(String requestID, Observation result) {
+                        printObservation(result);
+                    }
+
+                    @Override
+                    public void onFail(String requestID, C3PROErrorCode code) {
+
                     }
                 });
             }
@@ -246,14 +302,25 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void whenCancelledOrFailed() {
+                public void whenCancelledOrFailed(C3PROErrorCode code) {
                     /**
                      * If the task can not be prepared, a backup plan is needed.
                      * Here the fragment is removed from the FragmentManager so it can be created
                      * again later
-                     * TODO: proper error handling not yet implemented
                      * */
-                    getSupportFragmentManager().beginTransaction().remove(questionnaireFragment).commit();
+                    if (code == C3PROErrorCode.RESULT_CANCELLED) {
+                        /**
+                         * user just cancelled activity. do nothing
+                         * */
+                    } else {
+                        /**
+                         * If the task can not be prepared, a backup plan is needed.
+                         * Here the fragment is removed from the FragmentManager so it can be created
+                         * again later.
+                         * */
+                        Log.e(LTAG, code.toString());
+                        getSupportFragmentManager().beginTransaction().remove(questionnaireFragment).commit();
+                    }
                 }
             });
 
@@ -337,8 +404,8 @@ public class MainActivity extends AppCompatActivity {
                                  * If no fit data is available on the test phone, create height and
                                  * weight entries for testing
                                  * */
-                                //GoogleFitAgent.enterHeightDataPoint(getApplicationContext(), 1.68f);
-                                //GoogleFitAgent.enterWeightDataPoint(getApplicationContext(), 67f);
+                                // GoogleFitAgent.enterHeightDataPoint(getApplicationContext(), 1.68f);
+                                // GoogleFitAgent.enterWeightDataPoint(getApplicationContext(), 64f);
                             }
 
                             @Override
