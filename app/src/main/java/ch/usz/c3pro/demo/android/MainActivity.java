@@ -1,16 +1,12 @@
 package ch.usz.c3pro.demo.android;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.annotation.StyleRes;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatTextView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,10 +23,14 @@ import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
 
+import org.hl7.fhir.dstu3.model.Contract;
 import org.hl7.fhir.dstu3.model.Observation;
 import org.hl7.fhir.dstu3.model.Quantity;
 import org.hl7.fhir.dstu3.model.Questionnaire;
 import org.hl7.fhir.dstu3.model.QuestionnaireResponse;
+import org.researchstack.backbone.ResourcePathManager;
+import org.researchstack.backbone.task.Task;
+import org.researchstack.backbone.ui.ViewTaskActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,27 +38,27 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import ch.usz.c3pro.c3_pro_android_framework.C3PRO;
 import ch.usz.c3pro.c3_pro_android_framework.C3PROErrorCode;
-import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
-import ch.usz.c3pro.c3_pro_android_framework.dataqueue.jobs.LoadResultJob;
-import ch.usz.c3pro.c3_pro_android_framework.dataqueue.jobs.ReadQuestionnaireFromURLJob;
+import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.Pyro;
+import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.async.Callback;
+import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.async.ReadJasonQuestionnaireFromURLAsyncTask;
+import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.logic.consent.ConsentTaskOptions;
 import ch.usz.c3pro.c3_pro_android_framework.googlefit.GoogleFitAgent;
 import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireAdapter;
 import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireFragment;
 
 /**
  * C3PRO
- * <p/>
+ *
  * Created by manny Weber on 04/19/16.
  * Copyright © 2016 University Hospital Zurich. All rights reserved.
- * <p/>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,44 +71,19 @@ import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireFragment
  * a survey you have available as a HAPI FHIR Questionnaire
  */
 public class MainActivity extends AppCompatActivity {
-    private GoogleApiClient googleApiClient = null;
+    //debug
     public static final String LTAG = "LC3P";
 
-    @Override
-    public MenuInflater getMenuInflater() {
-        return super.getMenuInflater();
-    }
+    //files
+    public static String questionnaireListFilePath = "questionnaire_list";
+    public static String contractFilePath = "contract.json";
 
-    public MainActivity() {
-        super();
-    }
-
-    @Override
-    public void setTheme(@StyleRes int resid) {
-        super.setTheme(resid);
-    }
-
-    @Override
-    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-    }
-
-    @Nullable
-    @Override
-    public ActionBar getSupportActionBar() {
-        return super.getSupportActionBar();
-    }
-
-    @Override
-    public void setSupportActionBar(@Nullable Toolbar toolbar) {
-        super.setSupportActionBar(toolbar);
-    }
+    private GoogleApiClient googleApiClient = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         /**
          * Set the app up to collect Google Fit data.
@@ -144,10 +119,11 @@ public class MainActivity extends AppCompatActivity {
          * URLs in a background task and adding them to the listView defined in the layout file once
          * they are loaded.
          * */
-        String questionnaireList = C3PRO.getDataQueue().getRawFileAsString(getResources(), R.raw.questionnaire_list);
+
+        String questionnaireList = ResourcePathManager.getResourceAsString(this, questionnaireListFilePath);
         List<String> urlList = Arrays.asList(questionnaireList.split("[\\r\\n]+"));
         for (final String url : urlList) {
-            C3PRO.getDataQueue().getJsonQuestionnaireFromURL(url, url, new DataQueue.CreateQuestionnaireCallback() {
+            new ReadJasonQuestionnaireFromURLAsyncTask(url, url, new Callback.QuestionnaireReceiver() {
                 @Override
                 public void onSuccess(String requestID, Questionnaire result) {
                     questionnaireAdapter.add(result);
@@ -157,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onFail(String requestID, C3PROErrorCode code) {
                     Log.d(LTAG, "Reading questionnaire from URL failed: " + requestID + " error: " + code.toString());
                 }
-            });
+            }).execute();
         }
 
         /**
@@ -173,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                 cal.add(Calendar.WEEK_OF_YEAR, -2);
                 Date startTime = cal.getTime();
 
-                GoogleFitAgent.getAggregateStepCountBetween(startTime, now, "stepCount", new GoogleFitAgent.QuantityReceiver() {
+                GoogleFitAgent.getAggregateStepCountBetween(startTime, now, "stepCount", new Callback.QuantityReceiver() {
                     @Override
                     public void onSuccess(String requestID, Quantity result) {
                         /**
@@ -201,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                GoogleFitAgent.getLatestSampleOfHeight("height", new GoogleFitAgent.QuantityReceiver() {
+                GoogleFitAgent.getLatestSampleOfHeight("height", new Callback.QuantityReceiver() {
                     @Override
                     public void onSuccess(String requestID, Quantity result) {
                         Toast.makeText(MainActivity.this, result.getValue().floatValue() + " " + result.getUnit(), Toast.LENGTH_SHORT).show();
@@ -226,10 +202,10 @@ public class MainActivity extends AppCompatActivity {
                 Date now = new Date();
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(now);
-                cal.add(Calendar.WEEK_OF_YEAR, -2);
+                cal.add(Calendar.WEEK_OF_YEAR, -4);
                 Date startTime = cal.getTime();
 
-                GoogleFitAgent.getWeightSummaryBetween(startTime, now, "weightSummary", new GoogleFitAgent.ObservationReceiver() {
+                GoogleFitAgent.getWeightSummaryBetween(startTime, now, "weightSummary", new Callback.ObservationReceiver() {
                     @Override
                     public void onSuccess(String requestID, Observation result) {
                         printObservation(result);
@@ -246,12 +222,13 @@ public class MainActivity extends AppCompatActivity {
         /**
          * Clears the TextView declared in the layout xml
          * */
-        AppCompatButton clearButton = (AppCompatButton) findViewById(R.id.clear_button);
+        AppCompatButton clearButton = (AppCompatButton) findViewById(R.id.consent_button);
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 clearData();
-                Toast.makeText(MainActivity.this, "cleared!", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "cleared!", Toast.LENGTH_SHORT).show();
+                launchConsent();
             }
         });
     }
@@ -341,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
      * Prints the QuestionnaireResponse into the textView of the main activity under the list of questionnaires.
      */
     private void printQuestionnaireAnswers(QuestionnaireResponse response) {
-        String results = C3PRO.getFhirContext().newJsonParser().encodeResourceToString(response);
+        String results = Pyro.getFhirContext().newJsonParser().encodeResourceToString(response);
         AppCompatTextView resultView = (AppCompatTextView) findViewById(R.id.result_textView);
         resultView.setText(results);
     }
@@ -350,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
      * Prints an Observation into the textView of the main activity under the list of questionnaires.
      */
     private void printObservation(Observation observation) {
-        String results = C3PRO.getFhirContext().newJsonParser().encodeResourceToString(observation);
+        String results = Pyro.getFhirContext().newJsonParser().encodeResourceToString(observation);
         AppCompatTextView resultView = (AppCompatTextView) findViewById(R.id.result_textView);
         resultView.setText(results);
     }
@@ -493,6 +470,20 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private void launchConsent(){
+        /**
+         * Consent stuff
+         * */
+
+        String contractString = ResourcePathManager.getResourceAsString(this, contractFilePath);
+        Contract contract = Pyro.getFhirContext().newJsonParser().parseResource(Contract.class, contractString);
+
+        Task consentTask = Pyro.getContractAsTask(this, contract, new ConsentTaskOptions());
+
+        Intent intent = ViewTaskActivity.newIntent(this, consentTask);
+        startActivityForResult(intent,666);
     }
 }
 

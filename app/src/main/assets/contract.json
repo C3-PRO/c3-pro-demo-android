@@ -1,0 +1,372 @@
+{
+  "id": "org.chip.c3-pro.sample-consent",
+  "resourceType": "Contract",
+  "type": {
+    "coding": [{
+      "system": "http://hl7.org/fhir/contracttypecodes",
+      "code": "consent"
+    }]
+  },
+  "issued": "2015-12-03",
+  "applies": {
+    "start": "2015-12-03"
+  },
+  "authority": [{
+    "reference": "#bch"
+  }],
+  "subject": [{
+    "reference": "#eligibility"
+  }],
+  "term": [{
+    "type": {
+      "coding": [{
+        "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+        "code": "Overview"
+      }]
+    },
+    "extension": [{
+      "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+      "extension": [{
+        "url": "htmlContentFile",
+        "valueString": "1_overview"
+      }]
+    }],
+    "text": "This simple walkthrough will help you to understand the study and give you the opportunity to consent to participate."
+  },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Custom"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Activities"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "2_activity"
+          },
+          {
+            "url": "image",
+            "valueString": "00_Blank_to_Activities"
+          },
+          {
+            "url": "animation",
+            "valueString": "00_Blank_to_Activities"
+          }]
+      }],
+      "text": "The study app will ask you to respond to surveys."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Custom"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Sensor and Health Data"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "3_sensors"
+          },
+          {
+            "url": "image",
+            "valueString": "01_Activities_to_SensorData"
+          },
+          {
+            "url": "animation",
+            "valueString": "01_Activities_to_SensorData"
+          }]
+      }],
+      "text": "The C Tracker app will also collect activity data from your iPhone."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "DataGathering"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Data Gathering"
+        },
+          {
+            "url": "animation",
+            "valueString": "02_SensorData_to_DataGathering"
+          }]
+      }],
+      "text": "Collected data may reveal how hepatitis C affects people in daily life, both subjectively and objectively."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Privacy"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Privacy"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "5_privacyprotection"
+          }]
+      }],
+      "text": "Your data will be sent to a secure database, your personal identity data like your name never leaves your phone."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "DataUse"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Utilizing Data"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "6_datause"
+          }]
+      }],
+      "text": "Your coded data will be used for research and results from this research may be published in research journals."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "TimeCommitment"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Time Commitment"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "7_commitment"
+          }]
+      }],
+      "text": "We will ask you to answer survey questions every few weeks, which should take you no more than 15 minutes."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "StudySurvey"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Study Surveys"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "8_surveys"
+          }]
+      }],
+      "text": "We will ask you questions about your general well-being, medications you're taking and other health-related topics."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "StudyTasks"
+        }]
+      },
+      "text": "Your dashboard shows which tasks you have completed and when we'll be sending another survey.",
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Study Dashboard"
+        }]
+      }]
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Withdrawing"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Withdrawing"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "9_withdrawing"
+          }]
+      }],
+      "text": "You may withdraw your consent and discontinue participation at any time."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Custom"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Potential Benefits"
+        },
+          {
+            "url": "image",
+            "valueString": "10_PotentialBenefits"
+          },
+          {
+            "url": "animation",
+            "valueString": "10_PotentialBenefits"
+          }]
+      }],
+      "text": "The information collected by this study may give you new insights into how people are dealing with hepatitis C."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Custom"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Issues to Consider"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "11_issues"
+          },
+          {
+            "url": "image",
+            "valueString": "11_IssuesToConsider1"
+          },
+          {
+            "url": "animation",
+            "valueString": "11_IssuesToConsider1"
+          }]
+      }],
+      "text": "Some questions may make you uncomfortable. You may choose to skip those questions."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Custom"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Risks and Benefits"
+        },
+          {
+            "url": "image",
+            "valueString": "12_IssuesToConsider2"
+          },
+          {
+            "url": "animation",
+            "valueString": "12_IssuesToConsider2"
+          }]
+      }],
+      "text": "Participating in this study may change how you feel. You may feel more tired, sad, energized, or happy."
+    },
+    {
+      "type": {
+        "coding": [{
+          "system": "http://researchkit.org/docs/Constants/ORKConsentSectionType",
+          "code": "Custom"
+        }]
+      },
+      "extension": [{
+        "url": "http://fhir-registry.smarthealthit.org/StructureDefinition/ORKConsentSection",
+        "extension": [{
+          "url": "title",
+          "valueString": "Risk to Privacy"
+        },
+          {
+            "url": "htmlContentFile",
+            "valueString": "13_privacyrisks"
+          },
+          {
+            "url": "image",
+            "valueString": "13_RiskToPrivacy"
+          },
+          {
+            "url": "animation",
+            "valueString": "13_RiskToPrivacy"
+          }]
+      }],
+      "text": "Some of the data that you provide may be sensitive. For this reason we never send your name, address or birthday to our computers, only a random number."
+    }],
+  "contained": [{
+    "id": "bch",
+    "resourceType": "Organization",
+    "name": "Cool App Team"
+  },
+    {
+      "id": "eligibility",
+      "resourceType": "Group",
+      "type": "person",
+      "actual": false,
+      "characteristic": [{
+        "code": {
+          "text": "Are you 18 years of age or older?"
+        },
+        "valueBoolean": true,
+        "exclude": false
+      },
+        {
+          "code": {
+            "text": "Have you been diagnosed with XYZ?"
+          },
+          "valueBoolean": true,
+          "exclude": false
+        },
+        {
+          "code": {
+            "text": "Can you read and understand English in order to provide informed consent and follow the instructions?"
+          },
+          "valueBoolean": true,
+          "exclude": false
+        },
+        {
+          "code": {
+            "text": "Do you live in the United States of America?"
+          },
+          "valueBoolean": true,
+          "exclude": false
+        }]
+    }]
+}
+

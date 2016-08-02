@@ -16,7 +16,7 @@ work out of the box.
 To set up a new project using the C3PRO framework, the library is available on jCenter and can simply be added as a dependency:
 ```groovy
 dependencies {
-    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.1'){
+    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.2'){
         exclude module: 'javax.servlet-api'
         exclude module: 'hapi-fhir-base'
     }
@@ -137,7 +137,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     // TODO: include C3PRO framework, but exclude some of the hapi library
-    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.1'){
+    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.2'){
         exclude module: 'javax.servlet-api'
         exclude module: 'hapi-fhir-base'
     }
@@ -158,7 +158,7 @@ C3PRO.getDataQueue.create(resource);
 ##### The QuestionnaireFragment
 Use the `QuestionnaireFragment` to represent a Questionnaire and conduct a Survey based on it.
 ```java
-private void launchSurvey(Questionnaire questionnaire) {
+    private void launchSurvey(Questionnaire questionnaire) {
         /**
          * Looking up if a fragment for the given questionnaire has been created earlier. if so,
          * the survey is started, assuming that the TaskViewActivity has been created before!!
@@ -167,18 +167,19 @@ private void launchSurvey(Questionnaire questionnaire) {
         QuestionnaireFragment fragment = (QuestionnaireFragment) getSupportFragmentManager().findFragmentByTag(questionnaire.getId());
         if (fragment != null) {
             /**
-             * If the fragment has been added before, the TaskViewActivity is started
+             * If the fragment has been added before, the TaskViewActivity can be started directly,
+             * assuming that it was prepared right after the fragment was created.
              * */
             fragment.startTaskViewActivity();
         } else {
             /**
-             * If the fragment does not exist, we create it, add it to the fragment manager and
+             * If the fragment does not exist, create it, add it to the fragment manager and
              * let it prepare the TaskViewActivity
              * */
             final QuestionnaireFragment questionnaireFragment = new QuestionnaireFragment();
             questionnaireFragment.newInstance(questionnaire, new QuestionnaireFragment.QuestionnaireFragmentListener() {
                 @Override
-                public void whenTaskReady() {
+                public void whenTaskReady(String requestID) {
                     /**
                      * Only when the task is ready, the survey is started
                      * */
@@ -186,7 +187,7 @@ private void launchSurvey(Questionnaire questionnaire) {
                 }
 
                 @Override
-                public void whenCompleted(QuestionnaireResponse questionnaireResponse) {
+                public void whenCompleted(String requestID, QuestionnaireResponse questionnaireResponse) {
                     /**
                      * Where the response for a completed survey is received. Here it is printed
                      * to a TextView defined in the app layout.
@@ -195,14 +196,25 @@ private void launchSurvey(Questionnaire questionnaire) {
                 }
 
                 @Override
-                public void whenCancelledOrFailed() {
+                public void whenCancelledOrFailed(C3PROErrorCode code) {
                     /**
                      * If the task can not be prepared, a backup plan is needed.
                      * Here the fragment is removed from the FragmentManager so it can be created
                      * again later
-                     * TODO: proper error handling not yet implemented
                      * */
-                    getSupportFragmentManager().beginTransaction().remove(questionnaireFragment).commit();
+                    if (code == C3PROErrorCode.RESULT_CANCELLED) {
+                        /**
+                         * user just cancelled activity. do nothing
+                         * */
+                    } else {
+                        /**
+                         * If the task can not be prepared, a backup plan is needed.
+                         * Here the fragment is removed from the FragmentManager so it can be created
+                         * again later.
+                         * */
+                        Log.e(LTAG, code.toString());
+                        getSupportFragmentManager().beginTransaction().remove(questionnaireFragment).commit();
+                    }
                 }
             });
 

@@ -13,7 +13,7 @@ import org.researchstack.backbone.storage.file.PinCodeConfig;
 import org.researchstack.backbone.storage.file.SimpleFileAccess;
 import org.researchstack.backbone.storage.file.UnencryptedProvider;
 
-import ch.usz.c3pro.c3_pro_android_framework.C3PRO;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
 
 /**
  * C3PRO
@@ -59,16 +59,12 @@ public class C3PROApplication extends Application {
 
         // TODO: initialize c3pro
         /**
-         * Initialize C3PRO:
-         * C3PRO will provide you with a FhirContext. This Object is expensive and you should
-         * only have one instance in your app. Therefore, C3PRO will keep it as a singleton.
-         * Access it by calling C3PRO.getFhirContext();
-         *
-         * If you provide a context (your application) and an URL, C3PRO
-         * will create a DataQueue for you to create and read Resources from your server in a
+         * Initialize DataQueue:
+         * You have to provide a context (your application) and an URL to the FHIR Server.
+         * Once initialized, DataQueue can write and read Resources from your server in a
          * background thread.
          * */
-        C3PRO.init(this, "http://fhirtest.uhn.ca/baseDstu3");
+        DataQueue.init(this, "http://fhirtest.uhn.ca/baseDstu3");
 
         // TODO: following are some ResearchStack settings. For more info, visit http://researchstack.org
         // ResearchStack: Customize your pin code preferences

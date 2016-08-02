@@ -28,8 +28,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="print weight summary" />
-    <android.support.v7.widget.AppCompatButton android:id="@+id/clear_button"
+    <android.support.v7.widget.AppCompatButton android:id="@+id/consent_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="clear data" />
+        android:text="start consent" />
 </LinearLayout>
