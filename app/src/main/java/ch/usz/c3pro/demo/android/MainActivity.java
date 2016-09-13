@@ -22,43 +22,52 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
+import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.hl7.fhir.dstu3.model.Contract;
 import org.hl7.fhir.dstu3.model.Observation;
 import org.hl7.fhir.dstu3.model.Quantity;
 import org.hl7.fhir.dstu3.model.Questionnaire;
 import org.hl7.fhir.dstu3.model.QuestionnaireResponse;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.researchstack.backbone.ResourcePathManager;
-import org.researchstack.backbone.task.Task;
-import org.researchstack.backbone.ui.ViewTaskActivity;
+import org.researchstack.backbone.result.TaskResult;
 
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import ch.usz.c3pro.c3_pro_android_framework.C3PROErrorCode;
+import ch.usz.c3pro.c3_pro_android_framework.consent.ViewConsentTaskActivity;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.EncryptedDataQueue;
+import ch.usz.c3pro.c3_pro_android_framework.errors.C3PROErrorCode;
+import ch.usz.c3pro.c3_pro_android_framework.googlefit.GoogleFitAgent;
 import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.Pyro;
 import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.async.Callback;
 import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.async.ReadJasonQuestionnaireFromURLAsyncTask;
-import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.logic.consent.ConsentTaskOptions;
-import ch.usz.c3pro.c3_pro_android_framework.googlefit.GoogleFitAgent;
+import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.logic.consent.ConsentSummary;
+import ch.usz.c3pro.c3_pro_android_framework.pyromaniac.logic.consent.ContractAsTask;
 import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireAdapter;
-import ch.usz.c3pro.c3_pro_android_framework.questionnaire.QuestionnaireFragment;
+import ch.usz.c3pro.c3_pro_android_framework.questionnaire.ViewQuestionnaireTaskActivity;
 
 /**
  * C3PRO
- *
+ * <p/>
  * Created by manny Weber on 04/19/16.
  * Copyright © 2016 University Hospital Zurich. All rights reserved.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -76,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
     //files
     public static String questionnaireListFilePath = "questionnaire_list";
-    public static String contractFilePath = "contract.json";
+    public static String contractFilePath = " contract.json";
 
     private GoogleApiClient googleApiClient = null;
 
@@ -114,6 +123,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        surveyListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(LTAG, "about to encrypt...");
+                testEncryptResource((Questionnaire) surveyListView.getItemAtPosition(position));
+                return true;
+            }
+        });
+
+
         /**
          * Reading all Questionnaires listed in the questionnaire_list in the raw folder from their
          * URLs in a background task and adding them to the listView defined in the layout file once
@@ -137,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         /**
-         * The click of the button gets the step count for the past two weeks and shows it in a toast notification.
+         * The click of the button gets the step count for the past week and shows it in a toast notification.
          * */
         AppCompatButton stepButton = (AppCompatButton) findViewById(R.id.step_button);
         stepButton.setOnClickListener(new View.OnClickListener() {
@@ -146,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
                 Date now = new Date();
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(now);
-                cal.add(Calendar.WEEK_OF_YEAR, -2);
+                cal.add(Calendar.WEEK_OF_YEAR, -1);
                 Date startTime = cal.getTime();
 
                 GoogleFitAgent.getAggregateStepCountBetween(startTime, now, "stepCount", new Callback.QuantityReceiver() {
@@ -157,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                          * case! Just for demonstration here.)
                          * */
                         if (requestID.equals("stepCount")) {
-                            Toast.makeText(MainActivity.this, result.getValue().intValue() + " " + result.getUnit(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, result.getValue().intValue() + " " + result.getUnit(), Toast.LENGTH_LONG).show();
                         }
                     }
 
@@ -180,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                 GoogleFitAgent.getLatestSampleOfHeight("height", new Callback.QuantityReceiver() {
                     @Override
                     public void onSuccess(String requestID, Quantity result) {
-                        Toast.makeText(MainActivity.this, result.getValue().floatValue() + " " + result.getUnit(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, result.getValue().floatValue() + " " + result.getUnit(), Toast.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -192,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /**
-         * Print Observation of Weight summary over the past two weeks to the TextView declared in
+         * Print Observation of Weight summary over the past year to the TextView declared in
          * the layout xml
          * */
         AppCompatButton summaryButton = (AppCompatButton) findViewById(R.id.summary_button);
@@ -202,13 +221,15 @@ public class MainActivity extends AppCompatActivity {
                 Date now = new Date();
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(now);
-                cal.add(Calendar.WEEK_OF_YEAR, -4);
+                cal.add(Calendar.WEEK_OF_YEAR, -52);
                 Date startTime = cal.getTime();
 
                 GoogleFitAgent.getWeightSummaryBetween(startTime, now, "weightSummary", new Callback.ObservationReceiver() {
                     @Override
                     public void onSuccess(String requestID, Observation result) {
                         printObservation(result);
+                        String weightSummaryString = Pyro.getFhirContext().newJsonParser().encodeResourceToString(result);
+                        Toast.makeText(MainActivity.this, weightSummaryString, Toast.LENGTH_LONG);
                     }
 
                     @Override
@@ -220,97 +241,124 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /**
+         * Decrypt encrypted Resource in TextView
+         * */
+        AppCompatButton decryptButton = (AppCompatButton) findViewById(R.id.decrypt_button);
+        decryptButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AppCompatTextView resultView = (AppCompatTextView) findViewById(R.id.result_textView);
+                String encryptedString = resultView.getText().toString();
+                if (!Strings.isNullOrEmpty(encryptedString)) {
+                    testDecryptString(encryptedString);
+                }
+            }
+        });
+
+        /**
          * Clears the TextView declared in the layout xml
          * */
-        AppCompatButton clearButton = (AppCompatButton) findViewById(R.id.consent_button);
+        AppCompatButton clearButton = (AppCompatButton) findViewById(R.id.clear_button);
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 clearData();
-                //Toast.makeText(MainActivity.this, "cleared!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "cleared!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        /**
+         * Launches consent
+         * */
+        AppCompatButton consentButton = (AppCompatButton) findViewById(R.id.consent_button);
+        consentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 launchConsent();
             }
         });
     }
 
+    private void launchConsent() {
+        String contractString = ResourcePathManager.getResourceAsString(this, contractFilePath);
+        Contract contract = Pyro.getFhirContext().newJsonParser().parseResource(Contract.class, contractString);
 
-    /**
-     * Launches a survey from a FHIR questionnaire. This is how to use the QuestionnaireFragment
-     * Always prepare TaskViewActivity before starting it! It will happen in the background and call
-     * back its listener when it's ready.
-     * The fragment needs a context in order to run the TaskViewActivity, that's why it has to be
-     * committed to the FragmentManager
-     */
+        Intent intent = ViewConsentTaskActivity.newIntent(this, contract);
+        startActivityForResult(intent, 111);
+    }
+
     private void launchSurvey(Questionnaire questionnaire) {
-        /**
-         * Looking up if a fragment for the given questionnaire has been created earlier. if so,
-         * the survey is started, assuming that the TaskViewActivity has been created before!!
-         * The questionnaire IDs are used for identification, assuming they are unique.
-         * */
-        QuestionnaireFragment fragment = (QuestionnaireFragment) getSupportFragmentManager().findFragmentByTag(questionnaire.getId());
-        if (fragment != null) {
-            /**
-             * If the fragment has been added before, the TaskViewActivity can be started directly,
-             * assuming that it was prepared right after the fragment was created.
-             * */
-            fragment.startTaskViewActivity();
-        } else {
-            /**
-             * If the fragment does not exist, create it, add it to the fragment manager and
-             * let it prepare the TaskViewActivity
-             * */
-            final QuestionnaireFragment questionnaireFragment = new QuestionnaireFragment();
-            questionnaireFragment.newInstance(questionnaire, new QuestionnaireFragment.QuestionnaireFragmentListener() {
-                @Override
-                public void whenTaskReady(String requestID) {
-                    /**
-                     * Only when the task is ready, the survey is started
-                     * */
-                    questionnaireFragment.startTaskViewActivity();
-                }
 
-                @Override
-                public void whenCompleted(String requestID, QuestionnaireResponse questionnaireResponse) {
-                    /**
-                     * Where the response for a completed survey is received. Here it is printed
-                     * to a TextView defined in the app layout.
-                     * */
-                    printQuestionnaireAnswers(questionnaireResponse);
-                }
+        Intent intent = ViewQuestionnaireTaskActivity.newIntent(this, questionnaire);
 
-                @Override
-                public void whenCancelledOrFailed(C3PROErrorCode code) {
-                    /**
-                     * If the task can not be prepared, a backup plan is needed.
-                     * Here the fragment is removed from the FragmentManager so it can be created
-                     * again later
-                     * */
-                    if (code == C3PROErrorCode.RESULT_CANCELLED) {
-                        /**
-                         * user just cancelled activity. do nothing
-                         * */
-                    } else {
-                        /**
-                         * If the task can not be prepared, a backup plan is needed.
-                         * Here the fragment is removed from the FragmentManager so it can be created
-                         * again later.
-                         * */
-                        Log.e(LTAG, code.toString());
-                        getSupportFragmentManager().beginTransaction().remove(questionnaireFragment).commit();
-                    }
-                }
-            });
+        startActivityForResult(intent, 222);
+    }
 
-            /**
-             * In order for the fragment to get the context and be found later on, it has to be added
-             * to the fragment manager.
-             * */
-            getSupportFragmentManager().beginTransaction().add(questionnaireFragment, questionnaire.getId()).commit();
-            /**
-             * prepare the TaskViewActivity. As defined above, it will start the survey once the
-             * TaskViewActivity is ready.
-             * */
-            questionnaireFragment.prepareTaskViewActivity();
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == AppCompatActivity.RESULT_OK) {
+
+            switch (requestCode) {
+                case 111:
+
+                    // TEST: get the eligibility from the stepResult
+                    TaskResult result = (TaskResult) data.getSerializableExtra(ViewConsentTaskActivity.EXTRA_TASK_RESULT);
+                    boolean eligible = (boolean) result.getStepResult(ContractAsTask.ID_ELIGIBILITY_ASSESSMENT_STEP).getResult();
+
+                    ConsentSummary summary = (ConsentSummary) data.getExtras().get(ViewConsentTaskActivity.EXTRA_CONSENT_SUMMARY);
+                    Toast.makeText(MainActivity.this, "Eligibility Status is: " + eligible + "\nConsent Status is: " + summary.hasConsented(), Toast.LENGTH_SHORT).show();
+                    break;
+
+                case 222:
+                    QuestionnaireResponse response = (QuestionnaireResponse) data.getExtras().get(ViewQuestionnaireTaskActivity.EXTRA_QUESTIONNAIRE_RESPONSE);
+                    printQuestionnaireAnswers(response);
+                    break;
+            }
+        } else if (resultCode == AppCompatActivity.RESULT_CANCELED) {
+
+        }
+    }
+
+    private void testEncryptResource(IBaseResource resource) {
+        try {
+            // encrypt
+            JsonObject jsonObject = EncryptedDataQueue.getInstance().encryptResource(resource);
+            AppCompatTextView resultView = (AppCompatTextView) findViewById(R.id.result_textView);
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String prettyJson = gson.toJson(jsonObject);
+
+            resultView.setText(prettyJson);
+            Log.d(LTAG, "Encrypted resource: ");
+            Log.d(LTAG, prettyJson);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void testDecryptString(String encryptedString) {
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonElement jsonElement = gson.fromJson(encryptedString, JsonElement.class);
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+        if (jsonObject != null) {
+            // decrypt
+            IBaseResource decryptedResource = null;
+            try {
+                decryptedResource = EncryptedDataQueue.getInstance().decryptResource(jsonObject);
+                if (decryptedResource != null) {
+                    String decryptedResourceString = Pyro.getFhirContext().newJsonParser().encodeResourceToString(decryptedResource);
+
+                    Log.d(LTAG, "Decrypted resource: ");
+                    Log.d(LTAG, decryptedResourceString);
+                    AppCompatTextView resultView = (AppCompatTextView) findViewById(R.id.result_textView);
+                    resultView.setText(decryptedResourceString);
+                }
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -470,20 +518,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-    }
-
-    private void launchConsent(){
-        /**
-         * Consent stuff
-         * */
-
-        String contractString = ResourcePathManager.getResourceAsString(this, contractFilePath);
-        Contract contract = Pyro.getFhirContext().newJsonParser().parseResource(Contract.class, contractString);
-
-        Task consentTask = Pyro.getContractAsTask(this, contract, new ConsentTaskOptions());
-
-        Intent intent = ViewTaskActivity.newIntent(this, consentTask);
-        startActivityForResult(intent,666);
     }
 }
 

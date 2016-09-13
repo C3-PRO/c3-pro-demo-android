@@ -1,8 +1,6 @@
 package ch.usz.c3pro.demo.android;
 
 import android.app.Application;
-import android.content.Context;
-import android.support.multidex.MultiDex;
 
 import org.researchstack.backbone.StorageAccess;
 import org.researchstack.backbone.storage.database.AppDatabase;
@@ -13,7 +11,11 @@ import org.researchstack.backbone.storage.file.PinCodeConfig;
 import org.researchstack.backbone.storage.file.SimpleFileAccess;
 import org.researchstack.backbone.storage.file.UnencryptedProvider;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
 import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.EncryptedDataQueue;
 
 /**
  * C3PRO
@@ -43,21 +45,11 @@ import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
  */
 public class C3PROApplication extends Application {
 
-    // TODO: make it a multidex application
-    /* with HAPI it seemed necessary to enable multidex to accomodate the large
-    number of operations provided by the package. It seems to work without it now. Leaving it here
-    for now just in case.*/
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
 
-        // TODO: initialize c3pro
+        // TODO: initialize C3-PRO
         /**
          * Initialize DataQueue:
          * You have to provide a context (your application) and an URL to the FHIR Server.
@@ -65,6 +57,18 @@ public class C3PROApplication extends Application {
          * background thread.
          * */
         DataQueue.init(this, "http://fhirtest.uhn.ca/baseDstu3");
+
+        /**
+         * Or initialize EncryptedDataQueue. It can do everything the DataQueue can do plus it can
+         * send jsonObjects containing encrypted FHIR resources to a special C3-PRO server.
+         * */
+        try {
+            EncryptedDataQueue.init(this, "http://fhirtest.uhn.ca/baseDstu3", "http://encrypted.c3-pro.org", "certificate.cer");
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        }catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
 
         // TODO: following are some ResearchStack settings. For more info, visit http://researchstack.org
         // ResearchStack: Customize your pin code preferences
