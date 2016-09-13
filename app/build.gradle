@@ -28,7 +28,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     // TODO: include C3PRO framework, but exclude some of the hapi library
-    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.3'){
+    compile ('ch.usz.c3pro:c3-pro-android-framework:0.1.4'){
         exclude module: 'javax.servlet-api'
         exclude module: 'hapi-fhir-base'
     }
