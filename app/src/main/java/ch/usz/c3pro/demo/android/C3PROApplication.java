@@ -13,6 +13,7 @@ import org.researchstack.backbone.storage.file.UnencryptedProvider;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 
 import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
 import ch.usz.c3pro.c3_pro_android_framework.dataqueue.EncryptedDataQueue;
@@ -63,10 +64,12 @@ public class C3PROApplication extends Application {
          * send jsonObjects containing encrypted FHIR resources to a special C3-PRO server.
          * */
         try {
-            EncryptedDataQueue.init(this, "http://fhirtest.uhn.ca/baseDstu3", "http://encrypted.c3-pro.org", "certificate.cer");
+            EncryptedDataQueue.init(this, "http://fhirtest.uhn.ca/baseDstu3", "http://encrypted.c3-pro.org", "enc/public.crt", "");
         } catch (CertificateException e) {
             e.printStackTrace();
         }catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
             e.printStackTrace();
         }
 

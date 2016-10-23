@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
     //files
     public static String questionnaireListFilePath = "questionnaire_list";
-    public static String contractFilePath = " contract.json";
+    public static String contractFilePath = "contract.json";
 
     private GoogleApiClient googleApiClient = null;
 

@@ -1,34 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="ch.usz.c3pro.demo.android.MainActivity">
 
     <ListView
         android:id="@+id/survey_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1 ">
-    </ListView>
-    <android.support.v7.widget.AppCompatTextView android:id="@+id/result_textView"
+        android:layout_weight="1 "></ListView>
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/result_textView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
-    <android.support.v7.widget.AppCompatButton android:id="@+id/step_button"
+        android:layout_weight="2"
+        android:scrollbars = "vertical"/>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="show 2 weeks step count" />
-    <android.support.v7.widget.AppCompatButton android:id="@+id/height_button"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/decrypt_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="decrypt" />
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/clear_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="clear" />
+
+    </LinearLayout>
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="show height" />
-    <android.support.v7.widget.AppCompatButton android:id="@+id/summary_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="print weight summary" />
-    <android.support.v7.widget.AppCompatButton android:id="@+id/consent_button"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/step_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="step count" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/height_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="height" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/summary_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="weight summary" />
+    </LinearLayout>
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/consent_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="start consent" />
