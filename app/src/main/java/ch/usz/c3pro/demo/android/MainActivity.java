@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.List;
 
 import ch.usz.c3pro.c3_pro_android_framework.consent.ViewConsentTaskActivity;
+import ch.usz.c3pro.c3_pro_android_framework.dataqueue.DataQueue;
 import ch.usz.c3pro.c3_pro_android_framework.dataqueue.EncryptedDataQueue;
 import ch.usz.c3pro.c3_pro_android_framework.errors.C3PROErrorCode;
 import ch.usz.c3pro.c3_pro_android_framework.googlefit.GoogleFitAgent;

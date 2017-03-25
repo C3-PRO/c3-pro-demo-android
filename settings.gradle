@@ -1,1 +1,3 @@
 include ':app'
+include ':c3-pro-android-framework'
+project(':c3-pro-android-framework').projectDir = new File(settingsDir, '../C3PROAndroidFramework/c3-pro-android-framework')
